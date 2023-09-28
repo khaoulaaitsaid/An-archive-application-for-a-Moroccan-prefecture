@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service DRH</title>
+  <style>
+    /* Styles CSS */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      max-width: 400px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .button-container {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    input[type="text"], input[type="password"], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+
+    input[type="submit"], input[type="button"] {
+      width: 48%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Espacement entre les boutons */
+    input[type="submit"]:not(:last-child),
+    input[type="button"]:not(:last-child) {
+      margin-right: 2%;
+    }
+
+    /* Couleur pour les boutons de retour */
+    input[type="button"] {
+      background-color: #4CAF50;
+    }
+
+    /* Couleur pour le bouton "Enregistrer sous" */
+    input[type="button"][value="Enregistrer sous"] {
+      background-color: #2196F3;
+    }
+
+    /* Couleur pour le message de statut */
+    #statusMessage {
+      color: #666;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="center">Service DRH</h2>
+    <p class="center">Bienvenue dans le service DRH. Vous avez choisi le service DRH.</p>
+
+    <!-- Formulaire pour le choix de service -->
+    <form id="serviceChoiceForm" class="center">
+      <label for="serviceChoice">Choix de service :</label>
+      <select id="serviceChoice" name="serviceChoice">
+        <option value="SGRH">SGRH</option>
+        <option value="SFC">SFC</option>
+      </select>
+      <div class="button-container">
+        <input type="button" value="Choisir le service" onclick="chooseService()">
+        <input type="button" value="Retour a l'etape precedente" onclick="goBackToChoice()">
+      </div>
+    </form>
+
+    <!-- Formulaire pour importer le document -->
+    <form id="importForm" class="center" style="display: none;">
+      <label for="fileInput">Importer le document :</label>
+      <input type="file" id="fileInput" name="fileInput" accept=".doc, .docx, .pdf, .jpg, .png">
+      <div class="button-container">
+        <input type="button" value="Importer le document" onclick="importDocument()">
+        <input type="button" value="Retour a l'etape precedente" onclick="goBackToChoice()">
+      </div>
+    </form>
+
+    <!-- Formulaire pour renommer et enregistrer le document -->
+    <form id="renameForm" class="center" style="display: none;">
+      <label for="newFileName">Nouveau nom de fichier :</label>
+      <input type="text" id="newFileName" name="newFileName">
+      <div class="button-container">
+        <input type="button" value="Enregistrer le fichier" onclick="saveFile()">
+        <input type="button" value="Retour a l'etape precedente" onclick="goBackToImport()">
+      </div>
+    </form>
+
+    <!-- Espace pour afficher les messages de statut -->
+    <div id="statusMessage" class="center"></div>
+
+    <div class="center">
+      <input type="button" value="Retour a la page d'accueil" onclick="goBackToHome()">
+    </div>
+  </div>
+
+  <script>
+    // Variables globales pour stocker les informations sur le document importé
+    let selectedService = null;
+    let importedFile = null;
+
+    function chooseService() {
+      const serviceChoiceForm = document.getElementById("serviceChoiceForm");
+      const importForm = document.getElementById("importForm");
+      selectedService = document.getElementById("serviceChoice").value;
+
+      // Masquer le formulaire de choix de service et afficher le formulaire d'importation du document
+      serviceChoiceForm.style.display = "none";
+      importForm.style.display = "block";
+    }
+
+    function importDocument() {
+      const importForm = document.getElementById("importForm");
+      const renameForm = document.getElementById("renameForm");
+      const fileInput = document.getElementById("fileInput");
+
+      if (fileInput.files.length > 0) {
+        importedFile = fileInput.files[0];
+
+        // Masquer le formulaire d'importation et afficher le formulaire de renommage et enregistrement
+        importForm.style.display = "none";
+        renameForm.style.display = "block";
+      } else {
+        // Afficher un message d'erreur si aucun fichier n'a été sélectionné
+        document.getElementById("statusMessage").innerHTML = "Veuillez selectionner  un fichier a importer.";
+      }
+    }
+
+    function saveFile() {
+      const renameForm = document.getElementById("renameForm");
+      const newFileName = document.getElementById("newFileName").value;
+
+      if (newFileName.trim() === "") {
+        // Afficher un message d'erreur si le nouveau nom de fichier est vide
+        document.getElementById("statusMessage").innerHTML = "Veuillez entrer un nouveau nom de fichier.";
+        return;
+      }
+
+      // Renommer le fichier en utilisant le nouveau nom saisi
+      const renamedFile = new File([importedFile], newFileName);
+
+      // Créer un lien de téléchargement pour enregistrer le fichier dans le service sélectionné
+      const downloadLink = document.createElement("a");
+      downloadLink.href = URL.createObjectURL(renamedFile);
+      downloadLink.download = `${selectedService}_${newFileName}`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      // Afficher un message de succès
+      document.getElementById("statusMessage").innerHTML = "Le fichier a ete  enregistre avec succes.";
+
+      // Réinitialiser les variables et masquer le formulaire de renommage et enregistrement
+      selectedService = null;
+      importedFile = null;
+      renameForm.style.display = "none";
+    }
+  
+    
+    function goBackToChoice() {
+      const serviceChoiceForm = document.getElementById("serviceChoiceForm");
+      const importForm = document.getElementById("importForm");
+      const renameForm = document.getElementById("renameForm");
+
+      // Afficher le formulaire de choix de service et masquer les autres formulaires
+      serviceChoiceForm.style.display = "block";
+      importForm.style.display = "none";
+      renameForm.style.display = "none";
+    }
+
+    function goBackToImport() {
+      const importForm = document.getElementById("importForm");
+      const renameForm = document.getElementById("renameForm");
+
+      // Afficher le formulaire d'importation du document et masquer le formulaire de renommage et enregistrement
+      importForm.style.display = "block";
+      renameForm.style.display = "none";
+    }
+
+    function goBackToHome() {
+      // Redirection vers la page d'accueil
+      window.location.href = "home.php";
+    }
+  </script>
+</body>
+</html>
